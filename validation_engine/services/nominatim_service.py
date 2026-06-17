@@ -4,12 +4,15 @@ from threading import Lock
 from urllib import parse, request
 
 from config import (
+    CACHE_ENABLED,
+    CACHE_NOMINATIM,
     NOMINATIM_BASE_URL,
     NOMINATIM_EMAIL,
     NOMINATIM_ENABLED,
     NOMINATIM_TIMEOUT_SECONDS,
     NOMINATIM_USER_AGENT
 )
+from services.cache_service import get_cache
 from utils.helpers import coerce_float, normalize_text
 from utils.logger import logger
 
@@ -40,6 +43,13 @@ def enrich_with_nominatim(record):
         default["nominatim_summary"] = "Nominatim skipped because coordinates are missing."
         return default
 
+    # Check cache first
+    if CACHE_ENABLED and CACHE_NOMINATIM:
+        cache = get_cache()
+        cached_result = cache.get_nominatim(record)
+        if cached_result is not None:
+            return cached_result
+
     reverse_result = _reverse_lookup(lat, lon)
     search_result = _search_cemetery(record)
 
@@ -62,7 +72,7 @@ def enrich_with_nominatim(record):
     if not reasons:
         reasons.append("No Nominatim match was confirmed.")
 
-    return {
+    result = {
         "nominatim_checked": True,
         "nominatim_reverse_match": reverse_match,
         "nominatim_search_match": search_match,
@@ -71,6 +81,13 @@ def enrich_with_nominatim(record):
         "nearby_locality": nearby_locality,
         "osm_match": bool(record.get("osm_match")) or search_match
     }
+
+    # Cache the result
+    if CACHE_ENABLED and CACHE_NOMINATIM:
+        cache = get_cache()
+        cache.set_nominatim(record, result)
+
+    return result
 
 
 def _reverse_lookup(lat, lon):

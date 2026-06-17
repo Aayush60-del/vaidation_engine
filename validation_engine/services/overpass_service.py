@@ -6,12 +6,15 @@ import requests
 from rapidfuzz.fuzz import token_sort_ratio
 
 from config import (
+    CACHE_ENABLED,
+    CACHE_OVERPASS,
     OVERPASS_API_URL,
     OVERPASS_MAX_RETRIES,
     OVERPASS_RADIUS_METERS,
     OVERPASS_RATE_LIMIT_SECONDS,
     OVERPASS_TIMEOUT_SECONDS,
 )
+from services.cache_service import get_cache
 from utils.helpers import coerce_float, haversine_km
 from utils.logger import logger
 
@@ -41,29 +44,43 @@ def verify_with_overpass(record: Dict[str, Any], radius_meters: Optional[int] = 
             reason="Overpass skipped because coordinates are missing or invalid.",
         )
 
+    # Check cache first
+    if CACHE_ENABLED and CACHE_OVERPASS:
+        cache = get_cache()
+        cached_result = cache.get_overpass(record)
+        if cached_result is not None:
+            return cached_result
+
     response = _fetch_overpass(lat, lon, radius)
     elements = response.get("elements", []) if isinstance(response, dict) else []
     if not elements:
-        return _default_result(
+        result = _default_result(
             checked=True,
             reason=f"No OSM cemetery object found within {radius} meters.",
         )
+    else:
+        candidates = [
+            _build_candidate(record, element, lat, lon, radius)
+            for element in elements
+        ]
+        candidates = [candidate for candidate in candidates if candidate["osm_type"] in OSM_CEMETERY_TYPES]
+        if not candidates:
+            result = _default_result(
+                checked=True,
+                reason="OSM objects were found, but none used a supported cemetery tag.",
+            )
+        else:
+            best = _choose_best_candidate(candidates)
+            best["candidate_count"] = len(candidates)
+            best["multiple_nearby_candidates"] = len(candidates) > 1
+            result = _build_verification_result(best, radius)
 
-    candidates = [
-        _build_candidate(record, element, lat, lon, radius)
-        for element in elements
-    ]
-    candidates = [candidate for candidate in candidates if candidate["osm_type"] in OSM_CEMETERY_TYPES]
-    if not candidates:
-        return _default_result(
-            checked=True,
-            reason="OSM objects were found, but none used a supported cemetery tag.",
-        )
+    # Cache the result
+    if CACHE_ENABLED and CACHE_OVERPASS:
+        cache = get_cache()
+        cache.set_overpass(record, result)
 
-    best = _choose_best_candidate(candidates)
-    best["candidate_count"] = len(candidates)
-    best["multiple_nearby_candidates"] = len(candidates) > 1
-    return _build_verification_result(best, radius)
+    return result
 
 
 def build_overpass_query(lat: float, lon: float, radius_meters: int) -> str:
@@ -262,6 +279,8 @@ def _type_matches(csv_type, osm_type) -> bool:
 
     normalized_csv_type = _normalize_type(csv_type)
     normalized_osm_type = _normalize_type(osm_type)
+    if not normalized_csv_type:
+        return normalized_osm_type in OSM_CEMETERY_TYPES
     allowed = TYPE_MAPPING.get(normalized_csv_type, [])
     return bool(allowed and (normalized_osm_type in allowed or normalized_osm_type in OSM_CEMETERY_TYPES))
 

@@ -1,9 +1,8 @@
 from rapidfuzz import fuzz
 import re
-import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from db.mongo import good_collection, review_collection, reject_collection
+from db.mongo import good_collection, review_collection
 from models.inference import predict_duplicate_probability
 from utils.constants import (
     DUPLICATE_DISTANCE_KM,
@@ -17,8 +16,7 @@ from utils.helpers import build_address_text, coerce_float, haversine_km, normal
 
 VALIDATION_COLLECTIONS = (
     good_collection,
-    review_collection,
-    reject_collection
+    review_collection
 )
 
 
@@ -172,11 +170,15 @@ def run_dedup_sweep(workers: int | None = None, batch_size: int = 200):
         workers = MAX_WORKER_THREADS
 
     for collection in VALIDATION_COLLECTIONS:
-        cursor = collection.find({"validation_status": {"$in": ["valid", "review"]}})
+        cursor = collection.find({"validation_status": {"$in": ["valid", "review"]}}).batch_size(batch_size)
 
-        # Process in chunks to avoid unbounded memory growth.
         while True:
-            batch = list(cursor.limit(batch_size))
+            batch = []
+            for _ in range(batch_size):
+                try:
+                    batch.append(next(cursor))
+                except StopIteration:
+                    break
             if not batch:
                 break
 

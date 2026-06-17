@@ -225,7 +225,10 @@ class SparseRuralClassificationTests(unittest.TestCase):
         destination = route_record(record)
 
         self.assertEqual(destination, "good")
-        mock_good.insert_one.assert_called_once()
+        mock_good.replace_one.assert_called_once()
+        mock_review.delete_one.assert_called_once()
+        mock_reject.delete_one.assert_called_once()
+        mock_good.insert_one.assert_not_called()
         mock_review.insert_one.assert_not_called()
         mock_reject.insert_one.assert_not_called()
         mock_audit.insert_one.assert_not_called()

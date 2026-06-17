@@ -1,6 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 from validator.pipeline import run_pipeline
 from reports.daily_report import generate_daily_report
 from reports.metrics import generate_metrics

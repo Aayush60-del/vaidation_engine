@@ -1,42 +1,40 @@
-import os
+from pathlib import Path
 
-print("=== DIAGNOSTIC: Environment Variable Loading Order ===")
-print()
-
-# Step 1: Check BEFORE load_dotenv
-print("STEP 1: BEFORE load_dotenv()")
-raw_value = os.getenv("MONGO_URI")
-print(f"  os.getenv('MONGO_URI') = {repr(raw_value)}")
-print()
-
-# Step 2: Load dotenv
-from dotenv import load_dotenv
-result = load_dotenv()
-print(f"STEP 2: load_dotenv() returned: {result}")
-after_value = os.getenv("MONGO_URI")
-print(f"  os.getenv('MONGO_URI') = {repr(after_value)}")
-print()
-
-# Step 3: Import config (this is where config.MONGO_URI gets set)
 import config
-print(f"STEP 3: config.MONGO_URI = {repr(config.MONGO_URI)}")
-print()
 
-# Step 4: Now simulate what happens when main.py runs
-print("=== SIMULATING main.py IMPORT ORDER ===")
-print("In main.py, line 4 does: from validator.pipeline import run_pipeline")
-print("This triggers the following import chain:")
-print("  validator/pipeline.py -> services/ingestion_service.py -> db/mongo.py -> config.py")
-print()
-print("CRITICAL: config.py line 3 executes: MONGO_URI = os.getenv('MONGO_URI')")
-print(f"At that moment, os.getenv('MONGO_URI') was: {repr(config.MONGO_URI)}")
-print()
 
-# Step 5: Check if the .env file is where we expect it
-import pathlib
-env_path = pathlib.Path(".env")
-print(f"STEP 5: .env file exists at {env_path.resolve()}: {env_path.exists()}")
-if env_path.exists():
-    print(f"  Contents:")
-    for line in env_path.read_text().splitlines():
-        print(f"    {line}")
+def _redact(value):
+    if not value:
+        return value
+    text = str(value)
+    if "://" in text and "@" in text:
+        prefix, rest = text.split("://", 1)
+        return f"{prefix}://<redacted>@{rest.split('@', 1)[1]}"
+    if len(text) > 12:
+        return f"{text[:4]}...<redacted>"
+    return "<redacted>"
+
+
+print("=== DIAGNOSTIC: Config Values Loaded From .env ===")
+print(f"ENV_PATH = {Path(config.ENV_PATH).resolve() if config.ENV_PATH else '<not found>'}")
+print(f"MONGO_URI = {_redact(config.MONGO_URI)}")
+print(f"RAW_DB = {config.RAW_DB}")
+print(f"RAW_COLLECTION = {config.RAW_COLLECTION}")
+print(f"VALIDATION_DB = {config.VALIDATION_DB}")
+print(f"GOOD_COLLECTION = {config.GOOD_COLLECTION}")
+print(f"REVIEW_COLLECTION = {config.REVIEW_COLLECTION}")
+print(f"REJECT_COLLECTION = {config.REJECT_COLLECTION}")
+print(f"AUDIT_COLLECTION = {config.AUDIT_COLLECTION}")
+print(f"AI_VALIDATION_ENABLED = {config.AI_VALIDATION_ENABLED}")
+print(f"AI_VALIDATION_LLM_ENABLED = {config.AI_VALIDATION_LLM_ENABLED}")
+print(f"AI_VALIDATION_LLM_PROVIDER = {config.AI_VALIDATION_LLM_PROVIDER}")
+print(f"AI_VALIDATION_LLM_MODEL = {config.AI_VALIDATION_LLM_MODEL}")
+print(f"AI_VALIDATION_API_KEY set = {bool(config.AI_VALIDATION_API_KEY)}")
+print(f"NOMINATIM_ENABLED = {config.NOMINATIM_ENABLED}")
+print(f"NOMINATIM_USER_AGENT = {config.NOMINATIM_USER_AGENT}")
+print(f"NOMINATIM_EMAIL = {config.NOMINATIM_EMAIL}")
+print(f"OVERPASS_API_URL = {config.OVERPASS_API_URL}")
+print(f"OVERPASS_RADIUS_METERS = {config.OVERPASS_RADIUS_METERS}")
+print(f"OVERPASS_TIMEOUT_SECONDS = {config.OVERPASS_TIMEOUT_SECONDS}")
+print(f"OVERPASS_MAX_RETRIES = {config.OVERPASS_MAX_RETRIES}")
+print(f"OVERPASS_RATE_LIMIT_SECONDS = {config.OVERPASS_RATE_LIMIT_SECONDS}")

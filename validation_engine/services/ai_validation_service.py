@@ -1,5 +1,4 @@
 import json
-import os
 from urllib import request
 
 from config import (
@@ -7,9 +6,14 @@ from config import (
     AI_VALIDATION_ENABLED,
     AI_VALIDATION_LLM_ENABLED,
     AI_VALIDATION_LLM_MODEL,
-    AI_VALIDATION_LLM_PROVIDER
+    AI_VALIDATION_LLM_PROVIDER,
+    AI_VALIDATION_MIN_TRUST_SCORE_FOR_LLM,
+    AI_VALIDATION_SKIP_HIGH_CONFIDENCE,
+    CACHE_AI_VALIDATION,
+    CACHE_ENABLED
 )
 from models.inference import predict_ai_validation
+from services.cache_service import get_cache
 from utils.logger import logger
 
 
@@ -31,9 +35,30 @@ def run_ai_validation(record):
     if not AI_VALIDATION_ENABLED:
         return _default_result("disabled")
 
+    # Check cache first
+    if CACHE_ENABLED and CACHE_AI_VALIDATION:
+        cache = get_cache()
+        cached_result = cache.get_ai_validation(record)
+        if cached_result is not None:
+            return cached_result
+
     gnis_match = _bool_flag(record.get("gnis_match"))
     findagrave_match = _bool_flag(record.get("findagrave_match"))
     osm_match = _bool_flag(record.get("osm_match"))
+
+    # Skip AI validation for high-confidence records
+    if AI_VALIDATION_SKIP_HIGH_CONFIDENCE and _is_high_confidence_record(record, osm_match):
+        result = _build_skip_ai_result(
+            gnis_match=gnis_match,
+            findagrave_match=findagrave_match,
+            osm_match=osm_match,
+            reason="Skipped: High-confidence record"
+        )
+        # Cache the result
+        if CACHE_ENABLED and CACHE_AI_VALIDATION:
+            cache = get_cache()
+            cache.set_ai_validation(record, result)
+        return result
 
     model_result = predict_ai_validation(record)
     model_label = model_result.get("ai_validation_label") if model_result else None
@@ -63,7 +88,7 @@ def run_ai_validation(record):
 
     issues = list(dict.fromkeys(str(issue) for issue in issues if issue))
 
-    return {
+    result = {
         "ai_validation_enabled": True,
         "ai_validation_external_matches": {
             "gnis_match": bool(gnis_match),
@@ -92,6 +117,13 @@ def run_ai_validation(record):
             issues=issues
         )
     }
+
+    # Cache the result
+    if CACHE_ENABLED and CACHE_AI_VALIDATION:
+        cache = get_cache()
+        cache.set_ai_validation(record, result)
+
+    return result
 
 
 def _calculate_score(gnis_match, findagrave_match, osm_match, model_label, llm_result):
@@ -125,7 +157,12 @@ def _should_invoke_llm(record, gnis_match, findagrave_match, osm_match, model_la
     classification_confidence = _safe_float(record.get("classification_confidence"), 0.0)
     trust_score = _safe_float(record.get("trust_score"), 0.0)
     classification_confidence = max(0.0, min(1.0, classification_confidence))
-    trust_score = max(0.0, min(1.0, trust_score))
+    trust_score = max(0.0, min(100.0, trust_score))
+
+    # Skip LLM for high-confidence records (trust_score >= threshold)
+    if AI_VALIDATION_SKIP_HIGH_CONFIDENCE:
+        if trust_score >= AI_VALIDATION_MIN_TRUST_SCORE_FOR_LLM * 100:
+            return False
 
     return any([
         external_positive_count in {1, 2},
@@ -282,6 +319,57 @@ def _call_gemini(prompt):
     if not getattr(response, "text", None):
         raise ValueError("No text returned from Gemini response")
     return response.text
+
+
+def _is_high_confidence_record(record, osm_match):
+    """
+    Check if a record is high-confidence and should skip LLM validation.
+    
+    Returns True if:
+    - OSM match confirmed, OR
+    - Trust score >= 90, OR
+    - Validation status already GOOD/VALID
+    """
+    trust_score = _safe_float(record.get("trust_score"), 0.0)
+    validation_status = record.get("validation_status", "")
+    
+    high_confidence_threshold = AI_VALIDATION_MIN_TRUST_SCORE_FOR_LLM * 100
+    
+    return any([
+        bool(osm_match),
+        trust_score >= high_confidence_threshold,
+        validation_status in {"GOOD", "VALID"}
+    ])
+
+
+def _build_skip_ai_result(gnis_match, findagrave_match, osm_match, reason):
+    """
+    Build a result object for skipped AI validation (high-confidence record).
+    """
+    external_positive_count = gnis_match + findagrave_match + osm_match
+    
+    return {
+        "ai_validation_enabled": True,
+        "ai_validation_external_matches": {
+            "gnis_match": bool(gnis_match),
+            "findagrave_match": bool(findagrave_match),
+            "osm_match": bool(osm_match),
+            "positive_count": external_positive_count
+        },
+        "ai_validation_model_label": None,
+        "ai_validation_model_confidence": None,
+        "ai_validation_model_scores": {},
+        "ai_validation_model_source": None,
+        "ai_validation_llm_used": False,
+        "ai_validation_llm_confidence": None,
+        "ai_validation_llm_valid": None,
+        "ai_validation_llm_reasoning": "",
+        "ai_validation_score": 10 if external_positive_count >= 1 else 5,
+        "ai_validation_confidence_level": "HIGH" if external_positive_count >= 1 else "MEDIUM",
+        "ai_validation_action": "auto_approve" if external_positive_count >= 1 else "spot_check",
+        "ai_validation_issues": [],
+        "ai_validation_summary": reason
+    }
 
 
 def _build_summary(confidence_level, total_score, external_positive_count, model_label, llm_result, issues):

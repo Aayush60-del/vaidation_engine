@@ -1,14 +1,7 @@
 from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
-import mongomock
 from config import *
 
-try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
-    client.server_info()
-except (ServerSelectionTimeoutError, ConnectionFailure) as e:
-    print(f"WARNING: Local MongoDB server at {MONGO_URI} is unreachable. Falling back to in-memory mongomock. Error: {e}")
-    client = mongomock.MongoClient()
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
 
 validation_db = client[VALIDATION_DB]
 

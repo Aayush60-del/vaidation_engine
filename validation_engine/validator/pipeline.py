@@ -5,7 +5,8 @@ from validator.routing import route_record
 
 from utils.logger import logger
 from utils.thread_manager import process_record_worker
-from config import THREADING_ENABLED, MAX_WORKER_THREADS, BATCH_SIZE
+from config import THREADING_ENABLED, MAX_WORKER_THREADS, BATCH_SIZE, CACHE_ENABLED
+from services.cache_service import get_cache
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
@@ -65,6 +66,11 @@ def run_pipeline_threaded(max_workers=8, batch_size=100):
         "avg_time_per_record": round(elapsed / (processed_count or 1), 3),
         "max_worker_threads_used": max_workers,
     }
+    
+    # Log cache statistics if caching is enabled
+    if CACHE_ENABLED:
+        cache = get_cache()
+        cache.log_stats(logger.info)
                 
     print(f"\nValidation run completed in {elapsed:.2f}s. Stored {processed_count} processed records, {failed_count} failures.")
     return processed_count, failed_count, errors
@@ -74,6 +80,7 @@ def run_pipeline_sequential():
     records = fetch_records()
 
     processed_count = 0
+    start_time = time.time()
 
     for record in records:
 
@@ -99,7 +106,14 @@ def run_pipeline_sequential():
         )
         print(f"Processed: {record.get('name')}")
 
-    print(f"\nValidation run completed. Stored {processed_count} processed records in Validation_DB.")
+    elapsed = time.time() - start_time
+    
+    # Log cache statistics if caching is enabled
+    if CACHE_ENABLED:
+        cache = get_cache()
+        cache.log_stats(logger.info)
+
+    print(f"\nValidation run completed in {elapsed:.2f}s. Stored {processed_count} processed records in Validation_DB.")
 
 _last_run_metrics = {}
 def get_last_run_metrics():
