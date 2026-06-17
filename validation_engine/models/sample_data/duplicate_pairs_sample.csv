@@ -1,0 +1,5 @@
+label,left_name,right_name,left_address,right_address,left_city,right_city,left_state,right_state,left_zip_code,right_zip_code,left_type,right_type,left_latitude,left_longitude,right_latitude,right_longitude,left_trust_score,right_trust_score
+1,St Marys Cemetery,Saint Marys Catholic Cemetery,100 Church Rd,100 Church Road,Peoria,Peoria,IL,IL,61602,61602,cemetery,cemetery,40.6936,-89.5890,40.6937,-89.5892,96,98
+0,Oakwood Cemetery,Sunset Memorial Park,123 Oak St,890 Sunset Blvd,Springfield,Springfield,IL,IL,62701,62704,cemetery,memorial_park,39.7990,-89.6440,39.7817,-89.6501,94,72
+1,Greenwood Burial Ground,Greenwood Cemetery,45 Hill Rd,45 Hill Road,Columbus,Columbus,OH,OH,43004,43004,burial_ground,cemetery,39.9833,-82.9988,39.9835,-82.9990,91,93
+0,Rainbow Bridge Pet Memorial,Oak Hill Cemetery,12 River Ln,801 Oak Hill Ave,Denver,Denver,CO,CO,80205,80211,pet_cemetery,cemetery,39.7392,-104.9903,39.7700,-105.0150,88,95

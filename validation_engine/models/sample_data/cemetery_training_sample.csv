@@ -1,0 +1,5 @@
+label,name,notes,labels,address,city,state,zip_code,latitude,longitude,data_source,type,phone,website,opening_hours,osm_tags
+human_cemetery,Oakwood Cemetery,Historic local cemetery,"[""cemetery"",""historic""]",123 Oak St,Springfield,IL,62701,39.799,-89.644,OSM+Google,cemetery,555-0101,https://oakwood.example,Mo-Su 08:00-18:00,"{""landuse"": ""cemetery""}"
+pet_cemetery,Rainbow Bridge Pet Memorial,Pet burial site,"[""pet"",""memorial""]",44 Meadow Rd,Aurora,CO,80010,39.729,-104.831,Google,memorial,555-0102,https://rainbow.example,,{}
+ambiguous,Restlawn Gardens,Memorial garden with incomplete tags,"[""garden"",""memorial""]",78 Peace Ave,Tulsa,OK,74103,36.154,-95.993,OSM,unknown,,,,"{}"
+invalid,Smith Funeral Services,Funeral home misclassified as cemetery,"[""funeral"",""cremation""]",9 Main St,Dallas,TX,75201,32.776,-96.797,Google,funeral_home,555-0103,https://smithfuneral.example,,"{}"

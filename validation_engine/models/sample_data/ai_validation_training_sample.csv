@@ -1,0 +1,4 @@
+label,name,notes,labels,address,city,county,state,zip_code,latitude,longitude,data_source,type,phone,phone_number,website,email,description,gnis_match,findagrave_match,osm_match
+HIGH,Oakwood Cemetery,Historic local cemetery,"[""cemetery"",""historic""]",123 Oak St,Springfield,Sangamon,IL,62701,39.799,-89.644,OSM+Google,cemetery,555-0101,,https://oakwood.example,info@oakwood.example,Well-documented public cemetery,true,true,true
+MEDIUM,Restlawn Gardens,Memorial garden with partial enrichment,"[""garden"",""memorial""]",78 Peace Ave,Tulsa,Tulsa,OK,74103,36.154,-95.993,OSM,unknown,,,https://restlawn.example,,Some fields missing but location looks plausible,false,false,true
+LOW,Memory Park Plaza,Looks like a business not a burial ground,"[""memorial"",""plaza""]",9 Main St,Dallas,Dallas,TX,75201,32.776,-96.797,Google,business,,,,,Name pattern is suspicious and no external confirmation,false,false,false

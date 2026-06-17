@@ -1,0 +1,10 @@
+pymongo
+python-dotenv
+rapidfuzz
+requests
+geopy
+pandas
+apscheduler
+scikit-learn
+joblib
+google-genai
