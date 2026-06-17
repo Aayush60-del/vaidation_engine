@@ -1,7 +1,14 @@
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
+import mongomock
 from config import *
 
-client = MongoClient(MONGO_URI)
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+    client.server_info()
+except Exception as e:
+    print(f"WARNING: Could not connect to MongoDB. Using in-memory mongomock database. Error: {e}")
+    client = mongomock.MongoClient()
 
 validation_db = client[VALIDATION_DB]
 

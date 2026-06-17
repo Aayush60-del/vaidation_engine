@@ -122,7 +122,7 @@ def generate_metrics():
         ]
     }
 
-    return {
+    metrics_dict = {
         "good_data": good_collection.count_documents({}),
         "good_osm_verified": good_collection.count_documents({
             "osm_found": True,
@@ -149,3 +149,11 @@ def generate_metrics():
         "reject_reasons": _aggregate_reason_counts(reject_collection),
         "audit_reasons": _aggregate_reason_counts(audit_collection)
     }
+
+    # Inject threading performance metrics if available
+    from validator.pipeline import get_last_run_metrics
+    last_run = get_last_run_metrics()
+    if last_run:
+        metrics_dict["execution_performance"] = last_run
+
+    return metrics_dict
