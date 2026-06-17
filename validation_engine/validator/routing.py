@@ -15,6 +15,8 @@ from utils.constants import (
     VALID_STATUS
 )
 
+from config import REVIEW_COLLECTION, REJECT_COLLECTION, AUDIT_COLLECTION
+
 def route_record(record):
 
     status = record.get("validation_status")
@@ -34,7 +36,7 @@ def route_record(record):
                 record.get("decision_summary")
             ),
             "audit_timestamp": utc_now(),
-            "target_collection": "review"
+            "target_collection": REVIEW_COLLECTION
         }, record)
         return "review"
 
@@ -48,7 +50,7 @@ def route_record(record):
                 record.get("decision_summary")
             ),
             "audit_timestamp": utc_now(),
-            "target_collection": "reject"
+            "target_collection": REJECT_COLLECTION
         }, record)
         return "reject"
 
@@ -61,7 +63,7 @@ def route_record(record):
             "Record had an unknown validation status and was sent to reject."
         ),
         "audit_timestamp": utc_now(),
-        "target_collection": "reject"
+        "target_collection": REJECT_COLLECTION
     }, record)
     return "reject"
 

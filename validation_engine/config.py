@@ -1,7 +1,4 @@
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
 
@@ -13,7 +10,7 @@ VALIDATION_DB = os.getenv("VALIDATION_DB")
 GOOD_COLLECTION = os.getenv("GOOD_COLLECTION")
 REVIEW_COLLECTION = os.getenv("REVIEW_COLLECTION")
 REJECT_COLLECTION = os.getenv("REJECT_COLLECTION")
-AUDIT_COLLECTION = os.getenv("AUDIT_COLLECTION", "validation_audit")
+AUDIT_COLLECTION = os.getenv("AUDIT_COLLECTION")
 
 CRON_JOBS = [
     {"func": "run_dedup_sweep", "trigger": "cron", "hour": 2},
@@ -23,43 +20,31 @@ CRON_JOBS = [
     {"func": "generate_and_email_report", "trigger": "cron", "hour": 7}
 ]
 
-MODEL_DIR = os.getenv("MODEL_DIR", "models/artifacts")
-CLASSIFIER_MODEL_PATH = os.getenv(
-    "CLASSIFIER_MODEL_PATH",
-    os.path.join(MODEL_DIR, "cemetery_classifier.joblib")
-)
-DUPLICATE_MODEL_PATH = os.getenv(
-    "DUPLICATE_MODEL_PATH",
-    os.path.join(MODEL_DIR, "duplicate_matcher.joblib")
-)
-AI_VALIDATION_MODEL_PATH = os.getenv(
-    "AI_VALIDATION_MODEL_PATH",
-    os.path.join(MODEL_DIR, "ai_confidence_validator.joblib")
-)
-AI_VALIDATION_ENABLED = os.getenv("AI_VALIDATION_ENABLED", "true").lower() == "true"
-AI_VALIDATION_LLM_ENABLED = os.getenv("AI_VALIDATION_LLM_ENABLED", "false").lower() == "true"
-AI_VALIDATION_LLM_PROVIDER = os.getenv("AI_VALIDATION_LLM_PROVIDER", "openai").strip().lower()
-AI_VALIDATION_LLM_MODEL = os.getenv("AI_VALIDATION_LLM_MODEL", "gpt-4.1-mini")
-AI_VALIDATION_API_KEY = (
-    os.getenv("AI_VALIDATION_API_KEY")
-    or os.getenv("GEMINI_API_KEY")
-    or ""
-).strip()
+MODEL_DIR = "models/artifacts"
+CLASSIFIER_MODEL_PATH = os.path.join(MODEL_DIR, "cemetery_classifier.joblib")
+DUPLICATE_MODEL_PATH = os.path.join(MODEL_DIR, "duplicate_matcher.joblib")
+AI_VALIDATION_MODEL_PATH = os.path.join(MODEL_DIR, "ai_confidence_validator.joblib")
 
-NOMINATIM_ENABLED = os.getenv("NOMINATIM_ENABLED", "true").lower() == "true"
-NOMINATIM_BASE_URL = os.getenv("NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org").strip().rstrip("/")
-NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "validation-engine/1.0").strip()
-NOMINATIM_EMAIL = os.getenv("NOMINATIM_EMAIL", "").strip()
-NOMINATIM_TIMEOUT_SECONDS = int(os.getenv("NOMINATIM_TIMEOUT_SECONDS", "20"))
+AI_VALIDATION_ENABLED = True
+AI_VALIDATION_LLM_ENABLED = False
+AI_VALIDATION_LLM_PROVIDER = "openai"
+AI_VALIDATION_LLM_MODEL = "gpt-4.1-mini"
+AI_VALIDATION_API_KEY = ""
 
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "https://overpass-api.de/api/interpreter").strip()
-OVERPASS_RADIUS_METERS = int(os.getenv("OVERPASS_RADIUS_METERS", "500"))
-OVERPASS_TIMEOUT_SECONDS = int(os.getenv("OVERPASS_TIMEOUT_SECONDS", "30"))
-OVERPASS_MAX_RETRIES = int(os.getenv("OVERPASS_MAX_RETRIES", "2"))
-OVERPASS_RATE_LIMIT_SECONDS = float(os.getenv("OVERPASS_RATE_LIMIT_SECONDS", "1.0"))
+NOMINATIM_ENABLED = True
+NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org"
+NOMINATIM_USER_AGENT = "validation-engine/1.0"
+NOMINATIM_EMAIL = ""
+NOMINATIM_TIMEOUT_SECONDS = 20
+
+OVERPASS_API_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_RADIUS_METERS = 500
+OVERPASS_TIMEOUT_SECONDS = 30
+OVERPASS_MAX_RETRIES = 2
+OVERPASS_RATE_LIMIT_SECONDS = 1.0
 
 # Threading Configuration
-THREADING_ENABLED = os.getenv("THREADING_ENABLED", "true").lower() == "true"
-MAX_WORKER_THREADS = int(os.getenv("MAX_WORKER_THREADS", "8"))
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", "100"))
-QUEUE_TIMEOUT_SECONDS = float(os.getenv("QUEUE_TIMEOUT_SECONDS", "30.0"))
+THREADING_ENABLED = True
+MAX_WORKER_THREADS = 8
+BATCH_SIZE = 100
+QUEUE_TIMEOUT_SECONDS = 30.0

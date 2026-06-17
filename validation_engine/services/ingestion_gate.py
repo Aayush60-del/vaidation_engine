@@ -65,10 +65,12 @@ class IngestionGate:
         return record
 
 
+from config import AUDIT_COLLECTION
+
 def log_audit(record, status, code, detail=None):
 
     audit_collection.insert_one({
         **audit_payload(record, status, code, detail),
         "audit_timestamp": utc_now(),
-        "target_collection": "validation_audit"
+        "target_collection": AUDIT_COLLECTION
     })

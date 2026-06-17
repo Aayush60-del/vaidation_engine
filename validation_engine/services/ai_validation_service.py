@@ -23,11 +23,7 @@ def _safe_float(value, default=0.0):
 
 def _resolved_llm_api_key():
 
-    return (
-        AI_VALIDATION_API_KEY
-        or os.getenv("GEMINI_API_KEY")
-        or os.getenv("GOOGLE_API_KEY")
-    )
+    return AI_VALIDATION_API_KEY
 
 
 def run_ai_validation(record):

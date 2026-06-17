@@ -168,16 +168,8 @@ def run_dedup_sweep(workers: int | None = None, batch_size: int = 200):
     sweep_results = []
 
     if workers is None:
-        env_workers = os.getenv("DEDUP_SWEEP_WORKERS", "0")
-        try:
-            workers = int(env_workers)
-        except ValueError:
-            workers = 0
-
-    if not workers or workers < 1:
-        # I/O bound due to Mongo queries; use more threads than CPUs.
-        cpu = os.cpu_count() or 4
-        workers = min(32, cpu * 5)
+        from config import MAX_WORKER_THREADS
+        workers = MAX_WORKER_THREADS
 
     for collection in VALIDATION_COLLECTIONS:
         cursor = collection.find({"validation_status": {"$in": ["valid", "review"]}})
