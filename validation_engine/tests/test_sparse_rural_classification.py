@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from services.duplicate_service import near_duplicate_score, soft_match
-from services.ai_validation_service import run_ai_validation
+from services.ai_validation_service import _should_invoke_llm, run_ai_validation
 from services.persistence_service import build_persisted_record
 from utils.constants import VALID_STATUS
 from validator.routing import route_record
@@ -246,6 +246,17 @@ class SparseRuralClassificationTests(unittest.TestCase):
         self.assertNotIn("missing_phone", result["ai_validation_issues"])
         self.assertNotIn("missing_website", result["ai_validation_issues"])
         self.assertNotIn("missing_zip_code", result["ai_validation_issues"])
+
+    @patch("services.ai_validation_service.AI_VALIDATION_LLM_ENABLED", True)
+    @patch("services.ai_validation_service._resolved_llm_api_key", return_value="test-key")
+    def test_medium_trust_score_can_trigger_llm_escalation(self, _mock_api_key):
+
+        record = {
+            "trust_score": 50,
+            "classification_confidence": 0.9,
+        }
+
+        self.assertTrue(_should_invoke_llm(record, 0, 0, 0, None))
 
     @patch("services.duplicate_service.predict_duplicate_probability", return_value=None)
     def test_common_cemetery_names_are_not_duplicates_across_counties(self, _mock_model):

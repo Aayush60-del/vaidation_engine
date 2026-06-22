@@ -1,8 +1,14 @@
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.pyc.*
+.coverage
+htmlcov/
+*.log
 
 .env
+.env.*
+!.env.example
 venv/
 
 output/logs/*.log

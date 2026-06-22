@@ -132,7 +132,8 @@ def _record_already_exists_in_db(payload, target_collection):
     lon = coerce_float(payload.get("longitude"))
     
     # Check 1: Exact ID match (fastest)
-    if record_id and target_collection.find_one({"_id": record_id}):
+    existing_by_id = target_collection.find_one({"_id": record_id}) if record_id else None
+    if isinstance(existing_by_id, dict):
         logger.debug("Duplicate found by ID: %s", record_id)
         return True
     

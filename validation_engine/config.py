@@ -45,7 +45,7 @@ VALIDATION_DB = _env("VALIDATION_DB", required=True)
 GOOD_COLLECTION = _env("GOOD_COLLECTION", required=True)
 REVIEW_COLLECTION = _env("REVIEW_COLLECTION", required=True)
 REJECT_COLLECTION = _env("REJECT_COLLECTION", required=True)
-AUDIT_COLLECTION = _env("AUDIT_COLLECTION", required=True)
+AUDIT_COLLECTION = _env("AUDIT_COLLECTION", "validation_audit")
 
 CRON_JOBS = [
     {"func": "run_dedup_sweep", "trigger": "cron", "hour": 2},

@@ -533,6 +533,14 @@ python -m scripts.compact_validation_db --dry-run
 python -m scripts.compact_validation_db
 ```
 
+### Manual OSM Verification Check
+
+For a small live Overpass/Nominatim-style diagnostic against local CSV data:
+
+```bash
+python -m scripts.osm_verification_check
+```
+
 ### What Happens After Run
 
 - indexes are created

@@ -13,7 +13,7 @@ from utils.helpers import coerce_float, haversine_km
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-DATA_FOLDER = Path(__file__).resolve().parents[1] / "Final_states_data 1 (1)" / "Final_states_data"
+DATA_FOLDER = Path(__file__).resolve().parents[2] / "Final_states_data 1 (1)" / "Final_states_data"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 RADII_TO_TRY = (500, 1000, 2000)
 CEMETERY_TYPES = {"cemetery", "grave_yard", "burial_ground"}
